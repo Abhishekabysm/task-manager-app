@@ -87,12 +87,26 @@ export default function DashboardPage() {
     console.log('Sort clicked');
   };
 
-  const handleEditTask = (task) => {
+  const handleEditTask = async (task) => {
+    // Check if current user is the creator
+    if (user.id !== task.createdBy?._id && user._id !== task.createdBy?._id) {
+      alert("You don't have permission to edit this task. Only the creator can modify tasks.");
+      return;
+    }
     setTaskToEdit(task);
     setIsModalOpen(true);
   };
 
   const handleDeleteTask = async (taskId) => {
+    // First check if user is the creator
+    const taskToDelete = tasks.find(t => t._id === taskId);
+    if (!taskToDelete || 
+        (user.id !== taskToDelete.createdBy?._id && 
+         user._id !== taskToDelete.createdBy?._id)) {
+      alert("You don't have permission to delete this task. Only the creator can delete tasks.");
+      return;
+    }
+
     if (window.confirm('Are you sure you want to delete this task?')) {
       try {
         await api.delete(`/tasks/${taskId}`);
@@ -106,9 +120,13 @@ export default function DashboardPage() {
   const handleSaveTask = async (taskData) => {
     try {
       if (taskToEdit) {
+        // Editing existing task
         const response = await api.put(`/tasks/${taskToEdit._id}`, taskData);
-        setTasks(tasks.map(task => task._id === response.data._id ? response.data : task));
+        setTasks(tasks.map(task => 
+          task._id === response.data._id ? response.data : task
+        ));
       } else {
+        // Creating new task
         const response = await api.post('/tasks', taskData);
         setTasks([response.data, ...tasks]);
       }
@@ -194,7 +212,7 @@ export default function DashboardPage() {
             setIsModalOpen(false);
             setTaskToEdit(null);
           }}
-          task={taskToEdit}
+          task={taskToEdit}  // Make sure this matches
           onSave={handleSaveTask}
         />
       )}
