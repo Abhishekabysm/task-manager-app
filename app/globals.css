@@ -24,3 +24,323 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Date picker styles */
+input[type="date"] {
+  position: relative;
+  background-color: #0D0D0D;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  color: transparent;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Ensure date input text is visible */
+input[type="date"]::before {
+  content: attr(placeholder);
+  position: absolute;
+  color: #6B7280;
+}
+
+input[type="date"]:focus::before {
+  display: none;
+}
+
+/* For dark mode compatibility */
+@media (prefers-color-scheme: dark) {
+  input[type="date"] {
+    color-scheme: dark;
+  }
+  
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+}
+
+/* For Firefox */
+input[type="date"]::-moz-calendar-picker-indicator {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Improve select dropdown appearance */
+select option {
+  background-color: #1a1a2e;
+  color: white;
+  padding: 8px;
+}
+
+/* Remove default select styling */
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: none;
+}
+
+/* Remove default dropdown arrow in IE */
+select::-ms-expand {
+  display: none;
+}
+
+/* For Firefox */
+select {
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem top 50%;
+  background-size: 0.65rem auto;
+}
+
+/* For dark mode date picker */
+@media (prefers-color-scheme: dark) {
+  input[type="date"] {
+    color-scheme: dark;
+  }
+}
+
+/* Custom DatePicker Styles */
+.react-datepicker {
+  font-family: inherit !important;
+  background-color: #1a1a2e !important;
+  border: 1px solid #374151 !important;
+  border-radius: 0.5rem !important;
+  overflow: hidden;
+}
+
+.react-datepicker__header {
+  background-color: #111827 !important;
+  border-bottom: 1px solid #374151 !important;
+  padding-top: 0.75rem !important;
+}
+
+.react-datepicker__current-month {
+  color: #fff !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+}
+
+.react-datepicker__day-name {
+  color: #9CA3AF !important;
+  margin: 0.4rem !important;
+  width: 2rem !important;
+}
+
+.react-datepicker__day {
+  color: #fff !important;
+  margin: 0.4rem !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  line-height: 2rem !important;
+  border-radius: 9999px !important;
+}
+
+.react-datepicker__day:hover {
+  background-color: #374151 !important;
+}
+
+.react-datepicker__day--selected {
+  background-color: #3B82F6 !important;
+  color: #fff !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background-color: #3B82F6 !important;
+  color: #fff !important;
+}
+
+.react-datepicker__day--disabled {
+  color: #4B5563 !important;
+}
+
+.react-datepicker__navigation {
+  top: 0.75rem !important;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: #9CA3AF !important;
+}
+
+.react-datepicker__navigation:hover *::before {
+  border-color: #fff !important;
+}
+
+/* DatePicker responsive styles */
+.react-datepicker-wrapper {
+  width: 100% !important;
+}
+
+.custom-popper {
+  z-index: 9999 !important;
+}
+
+/* Mobile-first responsive styles */
+.react-datepicker {
+  font-size: 0.875rem !important;
+  background-color: #1a1a2e !important;
+  border-color: #374151 !important;
+  border-radius: 0.5rem !important;
+}
+
+.react-datepicker__header {
+  background-color: #1f1f3d !important;
+  border-bottom-color: #374151 !important;
+  padding: 0.5rem !important;
+  border-top-left-radius: 0.5rem !important;
+  border-top-right-radius: 0.5rem !important;
+}
+
+.react-datepicker__day-name,
+.react-datepicker__day {
+  margin: 0.2rem !important;
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  line-height: 1.5rem !important;
+  color: #e5e7eb !important;
+}
+
+.react-datepicker__day:hover {
+  background-color: #374151 !important;
+}
+
+.react-datepicker__day--selected {
+  background-color: #10b981 !important;
+  color: white !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background-color: #059669 !important;
+  color: white !important;
+}
+
+/* Tablet and up */
+@media (min-width: 640px) {
+  .react-datepicker__day-name,
+  .react-datepicker__day {
+    margin: 0.3rem !important;
+    width: 1.7rem !important;
+    height: 1.7rem !important;
+    line-height: 1.7rem !important;
+  }
+  
+  .react-datepicker {
+    font-size: 1rem !important;
+  }
+}
+
+/* Dark mode specific adjustments */
+@media (prefers-color-scheme: dark) {
+  .react-datepicker {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+}
+
+/* Add these new utility classes */
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* Custom backdrop blur for cards */
+.backdrop-blur-sm {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Smooth transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Smooth transitions */
+.transition-colors {
+  transition-property: color, background-color, border-color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Improved focus styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500;
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Better scrollbar styling */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+/* Table styles */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Responsive padding utility */
+@media (max-width: 640px) {
+  .p-responsive {
+    padding: 1rem;
+  }
+}
+
+@media (min-width: 641px) {
+  .p-responsive {
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .p-responsive {
+    padding: 2rem;
+  }
+}
+
+

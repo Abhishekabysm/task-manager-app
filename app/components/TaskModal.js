@@ -1,26 +1,49 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { getUsers } from '../lib/api';
-import FormField from './FormField';
-// Import useAuth to get the current user
+import { CalendarIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { forwardRef, useEffect, useState } from 'react';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 import { useAuth } from '../context/AuthContext';
+import { getUsers } from '../lib/api';
 
-const TaskModal = ({ isOpen, onClose, onSubmit, initialTask = null }) => {
-  // Get the current user from AuthContext
+// Move CustomInput outside of TaskModal
+const CustomInput = forwardRef(({ value, onClick }, ref) => (
+  <div className="relative">
+    <input
+      ref={ref}
+      type="text"
+      value={value || 'Select date'}
+      onClick={onClick}
+      readOnly
+      className="w-full p-3 bg-[#0D0D0D] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent cursor-pointer pr-10"
+    />
+    <CalendarIcon 
+      className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" 
+    />
+  </div>
+));
+
+// Set display name
+CustomInput.displayName = 'CustomInput';
+
+const TaskModal = ({ isOpen, onClose, onSave, initialTask = null }) => {  // Changed onSubmit to onSave
   const { user: currentUser } = useAuth();
-  // Keep your existing state variables
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState('todo');
   const [priority, setPriority] = useState('medium');
-  const [dueDate, setDueDate] = useState('');
   const [isCreator, setIsCreator] = useState(true);
-  
-  // Add these new state variables for user assignment
   const [users, setUsers] = useState([]);
   const [assignedTo, setAssignedTo] = useState('');
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  // Format the date to YYYY-MM-DD for the date input
+  const formatDateForInput = (date) => {
+    if (!date) return '';
+    return new Date(date).toISOString().split('T')[0];
+  };
 
   // Check if current user is the creator of the task
   useEffect(() => {
@@ -59,7 +82,7 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialTask = null }) => {
       };
       setPriority(priorityMap[initialTask.priority] || 'medium');
       
-      setDueDate(initialTask.dueDate ? new Date(initialTask.dueDate).toISOString().split('T')[0] : '');
+      setSelectedDate(initialTask.dueDate ? new Date(initialTask.dueDate) : null);
       // Add this line to set assignedTo if it exists in the task
       setAssignedTo(initialTask.assignedTo?._id || initialTask.assignedTo || '');
     } else {
@@ -68,7 +91,7 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialTask = null }) => {
       setDescription('');
       setStatus('todo');
       setPriority('medium');
-      setDueDate('');
+      setSelectedDate(null);
       setAssignedTo('');
     }
   }, [initialTask, isOpen]);
@@ -98,7 +121,6 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialTask = null }) => {
     loadUsers();
   }, [isOpen, currentUser]);
 
-  // Update your existing handleSubmit function to include assignedTo
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -116,12 +138,12 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialTask = null }) => {
       'high': 'High'
     };
     
-    onSubmit({
+    onSave({  // Changed onSubmit to onSave here
       title,
       description,
       status: statusMapping[status],
       priority: priorityMapping[priority],
-      dueDate: dueDate || undefined,
+      dueDate: selectedDate ? selectedDate.toISOString() : undefined,
       assignedTo: assignedTo || undefined
     });
     
@@ -131,127 +153,208 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialTask = null }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-lg shadow-xl w-full max-w-md">
-        <div className="p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-2 overflow-y-auto">
+      <div className="bg-[#1a1a2e] rounded-xl shadow-2xl w-full max-w-lg mx-auto my-2 sm:my-8 max-h-[calc(100vh-1rem)] overflow-y-auto">
+        {/* Header */}
+        <div className="sticky top-0 bg-[#1a1a2e] flex items-center justify-between p-3 sm:p-4 border-b border-gray-700">
+          <h2 className="text-lg sm:text-xl font-semibold text-white">
             {initialTask ? 'Edit Task' : 'Create New Task'}
           </h2>
-          
-          <form onSubmit={handleSubmit}>
-            {/* Keep all your existing form fields */}
-            <FormField
-              label="Title"
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <XMarkIcon className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-3 sm:p-4 space-y-4">
+          {/* Title */}
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-200">
+              Title
+            </label>
+            <input
               type="text"
-              id="title"
               value={title}
-              onChange={setTitle}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full p-2 sm:p-3 bg-[#0D0D0D] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              placeholder="Enter task title"
               required
-              placeholder="Task title"
-              validate={(value) => value.length >= 3}
             />
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-200 mb-2">
-                Description
-              </label>
-              <textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-3 bg-[#0D0D0D] border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="Task description"
-                rows={3}
-              ></textarea>
-            </div>
-            
-            {/* Status dropdown */}
-            <div className="mb-4">
-              <label htmlFor="status" className="block text-sm font-medium text-gray-200 mb-2">
+          </div>
+
+          {/* Description */}
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-200">
+              Description
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full p-2 sm:p-3 bg-[#0D0D0D] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+              placeholder="Enter task description"
+              rows={3}
+            />
+          </div>
+
+          {/* Status and Priority */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-200">
                 Status
               </label>
-              <select
-                id="status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="w-full p-3 bg-[#0D0D0D] border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              >
-                <option value="todo">To Do</option>
-                <option value="in-progress">In Progress</option>
-                <option value="done">Done</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full p-2 sm:p-3 bg-[#0D0D0D] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none pr-10"
+                >
+                  <option value="todo">To Do</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="done">Done</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
-            
-            {/* Priority dropdown */}
-            <div className="mb-4">
-              <label htmlFor="priority" className="block text-sm font-medium text-gray-200 mb-2">
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-200">
                 Priority
               </label>
-              <select
-                id="priority"
-                value={priority}
-                onChange={(e) => setPriority(e.target.value)}
-                className="w-full p-3 bg-[#0D0D0D] border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value)}
+                  className="w-full p-2 sm:p-3 bg-[#0D0D0D] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none pr-10"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
-            
-            {/* Due date input */}
-            <FormField
-              label="Due Date"
-              type="date"
-              id="dueDate"
-              value={dueDate}
-              onChange={setDueDate}
-              placeholder="Select a due date"
-            />
-            
-            {/* Add this new User Assignment dropdown */}
-            <div className="mb-4">
-              <label htmlFor="assignedTo" className="block text-sm font-medium text-gray-200 mb-2">
+          </div>
+
+          {/* Due Date and Assign To */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-200">
+                Due Date
+              </label>
+              <DatePicker
+                selected={selectedDate}
+                onChange={(date) => setSelectedDate(date)}
+                customInput={<CustomInput />}
+                dateFormat="MMM dd, yyyy"
+                minDate={new Date()}
+                placeholderText="Select due date"
+                className="datepicker-input"
+                calendarClassName="custom-datepicker"
+                popperClassName="custom-popper"
+                wrapperClassName="w-full"
+                showPopperArrow={false}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-200">
                 Assign To
               </label>
               <select
-                id="assignedTo"
                 value={assignedTo}
                 onChange={(e) => setAssignedTo(e.target.value)}
-                className="w-full p-3 bg-[#0D0D0D] border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 disabled={loadingUsers}
+                className="w-full p-3 bg-[#0D0D0D] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="">Unassigned</option>
                 {loadingUsers ? (
                   <option disabled>Loading users...</option>
                 ) : (
-                  users
-                    .map(user => (
-                      <option key={user._id} value={user._id}>
-                        {user.name || user.email || `${user.firstName || ''} ${user.lastName || ''}`.trim()}
-                      </option>
-                    ))
+                  users.map(user => (
+                    <option 
+                      key={user._id} 
+                      value={user._id}
+                      className="bg-[#0D0D0D] text-white"
+                    >
+                      {user.name || user.email || `${user.firstName || ''} ${user.lastName || ''}`.trim()}
+                    </option>
+                  ))
                 )}
               </select>
             </div>
-            
-            <div className="flex justify-end space-x-2 mt-6">
-              <button 
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600"
-              >
-                Cancel
-              </button>
-              <button 
-                type="submit"
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-500"
-              >
-                {initialTask ? 'Update Task' : 'Create Task'}
-              </button>
+          </div>
+
+          {/* Add Task Information Section - Only show when editing */}
+          {initialTask && (
+            <div className="mt-4 pt-4 border-t border-gray-700">
+              <h3 className="text-sm font-medium text-gray-200 mb-3">Task Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-400">
+                    Created By
+                  </label>
+                  <input
+                    type="text"
+                    value={initialTask.createdBy?.name || 
+                           initialTask.createdBy?.email || 
+                           `${initialTask.createdBy?.firstName || ''} ${initialTask.createdBy?.lastName || ''}`.trim() || 
+                           'Unknown'}
+                    readOnly
+                    className="w-full p-3 bg-[#0D0D0D] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent cursor-not-allowed opacity-75"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-400">
+                    Assigned By
+                  </label>
+                  <input
+                    type="text"
+                    value={
+                      initialTask.lastModifiedBy?.name || 
+                      initialTask.lastModifiedBy?.email || 
+                      `${initialTask.lastModifiedBy?.firstName || ''} ${initialTask.lastModifiedBy?.lastName || ''}`.trim() ||
+                      initialTask.createdBy?.name || 
+                      initialTask.createdBy?.email || 
+                      `${initialTask.createdBy?.firstName || ''} ${initialTask.createdBy?.lastName || ''}`.trim() || 
+                      'Unknown'
+                    }
+                    readOnly
+                    className="w-full p-3 bg-[#0D0D0D] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent cursor-not-allowed opacity-75"
+                  />
+                </div>
+              </div>
             </div>
-          </form>
-        </div>
+          )}
+
+          {/* Footer */}
+          <div className="sticky bottom-0 bg-[#1a1a2e] flex justify-end gap-2 pt-4 border-t border-gray-700 mt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-3 py-1.5 text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              {initialTask ? 'Update' : 'Create'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

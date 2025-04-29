@@ -271,13 +271,12 @@ router.put('/:id', auth, async (req, res) => {
     const { title, description, dueDate, priority, status, assignedTo } = req.body;
 
     // 2. Build task object with fields to update
-    const taskFields = {};
-    if (title !== undefined) taskFields.title = title;
-    if (description !== undefined) taskFields.description = description;
-    if (dueDate !== undefined) taskFields.dueDate = dueDate; // Allows setting to null
-    if (priority !== undefined) taskFields.priority = priority;
-    if (status !== undefined) taskFields.status = status;
-    if (assignedTo !== undefined) taskFields.assignedTo = assignedTo; // Allows setting to null
+    const taskFields = { ...req.body };
+    
+    // Add lastModifiedBy field when updating
+    if (taskFields.assignedTo) {
+        taskFields.lastModifiedBy = req.user.id;
+    }
 
     try {
         let task = await Task.findById(req.params.id);

@@ -12,29 +12,29 @@ export default function DashboardLayout({ children }) {
     <div className="min-h-screen bg-gray-900">
       {/* Header/Navigation */}
       <header className="bg-gray-800 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto px-2 sm:px-4 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Left side - Logo */}
             <div className="flex-shrink-0">
-              <Link href="/dashboard" className="text-white font-bold text-xl">
+              <Link href="/dashboard" className="text-white font-bold text-lg sm:text-xl">
                 TaskMaster
               </Link>
             </div>
 
             {/* Right side - User menu & notifications */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               {/* Notification dropdown */}
               <NotificationDropdown />
               
               {/* User dropdown or profile link */}
               <div className="relative">
                 <div className="flex items-center">
-                  <span className="text-gray-300 mr-2">
+                  <span className="text-gray-300 mr-2 hidden sm:inline">
                     {user?.name || 'User'}
                   </span>
                   <button
                     onClick={logout}
-                    className="text-sm text-gray-300 hover:text-white"
+                    className="text-sm text-gray-300 hover:text-white px-2 py-1"
                   >
                     Logout
                   </button>
@@ -46,7 +46,7 @@ export default function DashboardLayout({ children }) {
       </header>
 
       {/* Main content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6 overflow-x-hidden">
         {children}
       </main>
     </div>

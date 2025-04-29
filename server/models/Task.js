@@ -35,6 +35,11 @@ const TaskSchema = new mongoose.Schema({
     ref: 'User',
     default: null
   },
+  lastModifiedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
   notifications: [{
     message: String,
     read: {
