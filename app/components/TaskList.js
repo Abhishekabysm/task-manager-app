@@ -50,7 +50,7 @@ const TaskList = ({ tasks, onEdit, onDelete }) => {
                             onEdit(task);
                             setShowActions(false);
                           }}
-                          className="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-gray-800/50 flex items-center border-b border-gray-700/50"
+                          className="w-full text-left px-3 py-2 text-sm text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 flex items-center cursor-pointer transition-all duration-200"
                         >
                           <svg 
                             className="h-4 w-4 mr-2" 
@@ -68,7 +68,7 @@ const TaskList = ({ tasks, onEdit, onDelete }) => {
                             onDelete(task._id);
                             setShowActions(false);
                           }}
-                          className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-gray-800/50 flex items-center"
+                          className="w-full text-left px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 flex items-center cursor-pointer transition-all duration-200"
                         >
                           <svg 
                             className="h-4 w-4 mr-2" 
@@ -180,24 +180,24 @@ const TaskList = ({ tasks, onEdit, onDelete }) => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     {isCreator ? (
-                      <>
+                      <div className="flex items-center justify-end gap-4">
                         <button
                           onClick={() => onEdit(task)}
-                          className="text-indigo-400 hover:text-indigo-300 mr-4"
+                          className="text-blue-400 hover:text-blue-300 font-medium px-3 py-1.5 rounded hover:bg-blue-500/10 cursor-pointer transition-all duration-200"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => onDelete(task._id)}
-                          className="text-red-400 hover:text-red-300"
+                          className="text-red-400 hover:text-red-300 font-medium px-3 py-1.5 rounded hover:bg-red-500/10 cursor-pointer transition-all duration-200"
                         >
                           Delete
                         </button>
-                      </>
+                      </div>
                     ) : (
                       <button
-                        onClick={() => onEdit(task)} // You might want to create a separate onView handler
-                        className="text-indigo-400 hover:text-indigo-300"
+                        onClick={() => onEdit(task)}
+                        className="text-indigo-400 hover:text-indigo-300 font-medium px-3 py-1.5 rounded hover:bg-indigo-500/10 cursor-pointer transition-all duration-200"
                       >
                         View
                       </button>

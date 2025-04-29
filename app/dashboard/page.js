@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
 
 // Import our components
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 import TaskList from '../components/TaskList';
 import TaskModal from '../components/TaskModal';
 
@@ -14,17 +15,15 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState([]);
   const [loadingTasks, setLoadingTasks] = useState(true);
   const [error, setError] = useState(null);
-
-  // State for filters and search
-  const [view, setView] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('createdAt_desc');
 
   // State for Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState(null);
+
+  // State for Delete Confirmation Modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
 
   const fetchTasks = useCallback(async () => {
     if (authLoading) return;
@@ -32,19 +31,8 @@ export default function DashboardPage() {
     setLoadingTasks(true);
     setError(null);
 
-    const params = new URLSearchParams();
-    if (view !== 'all') params.append('view', view);
-    if (statusFilter) params.append('status', statusFilter);
-    if (priorityFilter) params.append('priority', priorityFilter);
-    if (searchTerm) params.append('search', searchTerm);
-    if (sortBy) {
-      const [field, direction] = sortBy.split('_');
-      params.append('sortField', field);
-      params.append('sortOrder', direction);
-    }
-
     try {
-      const response = await api.get('/tasks', { params });
+      const response = await api.get('/tasks');
       setTasks(response.data);
     } catch (err) {
       console.error('Failed to fetch tasks:', err);
@@ -52,7 +40,7 @@ export default function DashboardPage() {
     } finally {
       setLoadingTasks(false);
     }
-  }, [authLoading, view, statusFilter, priorityFilter, searchTerm, sortBy]);
+  }, [authLoading]);
 
   useEffect(() => {
     fetchTasks();
@@ -77,16 +65,6 @@ export default function DashboardPage() {
     setSearchTerm(term);
   };
 
-  const handleFilter = () => {
-    // Implement filter modal or dropdown logic
-    console.log('Filter clicked');
-  };
-
-  const handleSort = () => {
-    // Implement sort modal or dropdown logic
-    console.log('Sort clicked');
-  };
-
   const handleEditTask = async (task) => {
     // Check if current user is the creator
     if (user.id !== task.createdBy?._id && user._id !== task.createdBy?._id) {
@@ -98,7 +76,6 @@ export default function DashboardPage() {
   };
 
   const handleDeleteTask = async (taskId) => {
-    // First check if user is the creator
     const taskToDelete = tasks.find(t => t._id === taskId);
     if (!taskToDelete || 
         (user.id !== taskToDelete.createdBy?._id && 
@@ -107,13 +84,18 @@ export default function DashboardPage() {
       return;
     }
 
-    if (window.confirm('Are you sure you want to delete this task?')) {
-      try {
-        await api.delete(`/tasks/${taskId}`);
-        setTasks(tasks.filter(task => task._id !== taskId));
-      } catch (err) {
-        setError(`Failed to delete task. ${err.message}`);
-      }
+    setTaskToDelete(taskToDelete);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await api.delete(`/tasks/${taskToDelete._id}`);
+      setTasks(tasks.filter(task => task._id !== taskToDelete._id));
+      setIsDeleteModalOpen(false);
+      setTaskToDelete(null);
+    } catch (err) {
+      setError(`Failed to delete task. ${err.message}`);
     }
   };
 
@@ -147,7 +129,7 @@ export default function DashboardPage() {
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="mt-4 sm:mt-0 w-full sm:w-auto px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-purple-500/20"
+          className="mt-4 sm:mt-0 w-full sm:w-auto px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-purple-500/20 cursor-pointer"
         >
           <HiPlus className="w-6 h-6" />
           <span className="font-semibold">New Task</span>
@@ -175,8 +157,7 @@ export default function DashboardPage() {
           
           <div className="flex gap-3">
             <button 
-              onClick={handleFilter}
-              className="px-4 py-2 bg-gray-800/40 border border-gray-700/50 rounded-lg text-gray-300 hover:bg-gray-800/60 transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-gray-800/40 border border-gray-700/50 rounded-lg text-gray-300 hover:bg-gray-800/60 transition-colors flex items-center gap-2 cursor-pointer"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -185,8 +166,7 @@ export default function DashboardPage() {
             </button>
             
             <button 
-              onClick={handleSort}
-              className="px-4 py-2 bg-gray-800/40 border border-gray-700/50 rounded-lg text-gray-300 hover:bg-gray-800/60 transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-gray-800/40 border border-gray-700/50 rounded-lg text-gray-300 hover:bg-gray-800/60 transition-colors flex items-center gap-2 cursor-pointer"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
@@ -198,11 +178,13 @@ export default function DashboardPage() {
       </div>
 
       {/* Task List Component */}
-      <TaskList 
-        tasks={tasks}
-        onEdit={handleEditTask}
-        onDelete={handleDeleteTask}
-      />
+      <div className="relative z-[2]">
+        <TaskList 
+          tasks={tasks}
+          onEdit={handleEditTask}
+          onDelete={handleDeleteTask}
+        />
+      </div>
 
       {/* Task Modal */}
       {isModalOpen && (
@@ -216,6 +198,17 @@ export default function DashboardPage() {
           onSave={handleSaveTask}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setTaskToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        taskTitle={taskToDelete?.title || ''}
+      />
 
       {/* Error Display */}
       {error && (
