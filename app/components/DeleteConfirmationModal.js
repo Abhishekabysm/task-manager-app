@@ -1,5 +1,18 @@
-export default function DeleteConfirmationModal({ isOpen, onClose, onConfirm, taskTitle }) {
+export default function DeleteConfirmationModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  title = "Delete Item",
+  message = "Are you sure you want to delete this item? This action cannot be undone.",
+  confirmButtonText = "Delete",
+  taskTitle = "" // For backward compatibility
+}) {
   if (!isOpen) return null;
+
+  // If taskTitle is provided, use the old message format
+  const displayMessage = taskTitle
+    ? `Are you sure you want to delete "${taskTitle}"? This action cannot be undone.`
+    : message;
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
@@ -12,15 +25,15 @@ export default function DeleteConfirmationModal({ isOpen, onClose, onConfirm, ta
               </svg>
             </div>
           </div>
-          
+
           <h3 className="text-xl font-semibold text-white text-center mb-2">
-            Delete Task
+            {taskTitle ? "Delete Task" : title}
           </h3>
-          
+
           <p className="text-gray-300 text-center mb-6">
-            Are you sure you want to delete "{taskTitle}"? This action cannot be undone.
+            {displayMessage}
           </p>
-          
+
           <div className="flex gap-3">
             <button
               onClick={onClose}
@@ -32,7 +45,7 @@ export default function DeleteConfirmationModal({ isOpen, onClose, onConfirm, ta
               onClick={onConfirm}
               className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors cursor-pointer"
             >
-              Delete
+              {confirmButtonText}
             </button>
           </div>
         </div>

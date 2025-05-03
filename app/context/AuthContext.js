@@ -33,50 +33,78 @@ export const AuthProvider = ({ children }) => {
 
   // --- Load User Function (Called on initial load and after login/register) ---
   const loadUser = useCallback(async () => {
+    console.log('loadUser called, current state:', { hasToken: !!token, hasUser: !!user });
+
     // Check for token in localStorage on initial load
     const storedToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    if (!storedToken && !token) { // No token found anywhere
-        setAuthState(null, null);
+
+    // No token found anywhere
+    if (!storedToken && !token) {
+        console.log('No token found, clearing auth state');
+        setToken(null);
+        setUser(null);
         setLoading(false);
         return;
     }
 
     // If we have a token (either from state or storage), try to verify it
     const currentToken = token || storedToken;
-    if (!currentToken) { // Should not happen based on above check, but safeguard
-        setAuthState(null, null);
+
+    // Should not happen based on above check, but safeguard
+    if (!currentToken) {
+        console.log('No current token, clearing auth state');
+        setToken(null);
+        setUser(null);
         setLoading(false);
         return;
     }
 
     // Set token in state and headers if loaded from storage
     if (!token && storedToken) {
+        console.log('Setting token from localStorage');
         setToken(storedToken);
         api.defaults.headers.common['x-auth-token'] = storedToken;
     }
 
+    // If we already have user data and token hasn't changed, no need to fetch again
+    if (user && token === currentToken) {
+        console.log('User already loaded and token unchanged, skipping fetch');
+        setLoading(false);
+        return;
+    }
+
+    console.log('Fetching user data with token');
     setLoading(true);
+
     try {
-      // We need an endpoint to get user data based on the token
-      // Let's assume '/api/auth/me' exists (we need to create this endpoint)
-      // If '/api/auth/me' doesn't exist yet, this will fail.
-      // For now, we might just store the token and assume validity
-      // until we implement the '/me' route.
+      // Fetch user data with the token
+      const response = await api.get('/auth/me');
+      console.log('User data fetched successfully:', response.data);
 
-      // --- Actual implementation using /api/auth/me ---
-      const response = await api.get('/auth/me'); // Call the backend endpoint
-      setAuthState(currentToken, response.data); // Set token and user data from response
-      // --- End actual implementation ---
+      // Update both token and user
+      setToken(currentToken);
+      setUser(response.data);
 
+      // Ensure token is in headers
+      api.defaults.headers.common['x-auth-token'] = currentToken;
+
+      // Clear any previous errors
+      setError(null);
     } catch (err) {
-      // Log specific error type if available (e.g., from interceptor)
+      // Log specific error type if available
       console.error('Failed to load user or verify token:', err.response?.data?.message || err.message);
-      setAuthState(null, null); // Clear state on error (e.g., invalid/expired token)
+
+      // Clear auth state on error (invalid/expired token)
+      setToken(null);
+      setUser(null);
+      localStorage.removeItem('token');
+      delete api.defaults.headers.common['x-auth-token'];
+
       setError('Failed to verify authentication.');
     } finally {
       setLoading(false);
     }
-  }, [token]); // Dependency on token ensures we re-check if token changes externally
+  }, [token, user]); // Dependencies on both token and user
 
   // --- Effect to Load User on Initial Mount ---
   useEffect(() => {
@@ -88,16 +116,56 @@ export const AuthProvider = ({ children }) => {
   async function login(email, password) {
     setLoading(true);
     setError(null);
-    
+
     try {
+      // First, authenticate with credentials
       const response = await api.post('/auth/login', { email, password });
-      
-      // Handle successful login
-      setAuthState(response.data.token, response.data.user);
-      router.push('/dashboard');
-      
-      setLoading(false);
-      return true;
+
+      if (!response.data.token) {
+        throw new Error('No token received from server');
+      }
+
+      // Set the token in state and localStorage
+      setToken(response.data.token);
+      localStorage.setItem('token', response.data.token);
+      api.defaults.headers.common['x-auth-token'] = response.data.token;
+
+      // If user data is included in the response, use it
+      if (response.data.user) {
+        setUser(response.data.user);
+
+        // Wait to ensure state is updated before redirecting
+        setTimeout(() => {
+          router.push('/dashboard');
+          setLoading(false);
+        }, 300);
+
+        return true;
+      }
+
+      // If no user data in response, fetch it with the token
+      try {
+        const userResponse = await api.get('/auth/me');
+        setUser(userResponse.data);
+
+        // Now redirect after we have both token and user data
+        setTimeout(() => {
+          router.push('/dashboard');
+          setLoading(false);
+        }, 300);
+
+        return true;
+      } catch (userErr) {
+        console.error('Failed to fetch user data after login:', userErr);
+        // Even if user fetch fails, we still have a token, so consider login successful
+        // but log the error
+        setTimeout(() => {
+          router.push('/dashboard');
+          setLoading(false);
+        }, 300);
+
+        return true;
+      }
     } catch (err) {
       // Handle specific error cases with user-friendly messages
       if (err.response?.status === 400) {
@@ -110,30 +178,72 @@ export const AuthProvider = ({ children }) => {
         // Generic fallback error
         setError('Login failed. Please try again later.');
       }
-      
+
       setLoading(false);
       return false;
     }
   }
 
   // --- Register Function ---
-  const register = async (name, email, password) => {
+  const register = async (name, email, password, country) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.post('/auth/register', { name, email, password });
-      const newToken = response.data.token;
-      setAuthState(newToken, null);
-      // await loadUser(); // Or fetch user data directly if register returns it
-      router.push('/dashboard'); // Redirect to dashboard after registration
-      return true; // Indicate success
+      console.log('Registering with data:', { name, email, password: '***', country });
+      const response = await api.post('/auth/register', { name, email, password, country });
+      console.log('Registration response:', response.data);
+
+      if (!response.data.token) {
+        throw new Error('No token received from server');
+      }
+
+      // Set the token in state and localStorage
+      setToken(response.data.token);
+      localStorage.setItem('token', response.data.token);
+      api.defaults.headers.common['x-auth-token'] = response.data.token;
+
+      // If user data is included in the response, use it
+      if (response.data.user) {
+        setUser(response.data.user);
+
+        // Wait to ensure state is updated before redirecting
+        setTimeout(() => {
+          router.push('/dashboard');
+          setLoading(false);
+        }, 300);
+
+        return true;
+      }
+
+      // If no user data in response, fetch it with the token
+      try {
+        const userResponse = await api.get('/auth/me');
+        setUser(userResponse.data);
+
+        // Now redirect after we have both token and user data
+        setTimeout(() => {
+          router.push('/dashboard');
+          setLoading(false);
+        }, 300);
+
+        return true;
+      } catch (userErr) {
+        console.error('Failed to fetch user data after registration:', userErr);
+        // Even if user fetch fails, we still have a token, so consider registration successful
+        setTimeout(() => {
+          router.push('/dashboard');
+          setLoading(false);
+        }, 300);
+
+        return true;
+      }
     } catch (err) {
-      console.error('Registration failed:', err.response?.data?.message || err.message);
+      console.error('Registration failed:', err);
+      console.error('Error details:', err.response?.data);
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
       setAuthState(null, null);
-      return false; // Indicate failure
-    } finally {
       setLoading(false);
+      return false; // Indicate failure
     }
   };
 
@@ -147,7 +257,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     token,
     user,
-    isAuthenticated: !!token, // Simple check if token exists
+    isAuthenticated: !!user, // Check for user object instead of just token
     loading,
     error,
     login,

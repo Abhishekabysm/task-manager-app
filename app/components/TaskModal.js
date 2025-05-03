@@ -17,8 +17,8 @@ const CustomInput = forwardRef(({ value, onClick }, ref) => (
       readOnly
       className="w-full px-4 py-2 bg-gray-800/40 border border-gray-700/50 rounded-lg text-gray-200 placeholder-gray-400 focus:outline-none focus:border-purple-500/50 transition-colors cursor-pointer pr-10"
     />
-    <CalendarIcon 
-      className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" 
+    <CalendarIcon
+      className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
     />
   </div>
 ));
@@ -34,36 +34,47 @@ const TaskModal = ({ isOpen, onClose, onSave, task = null }) => {
   const [priority, setPriority] = useState('medium');
   const [selectedDate, setSelectedDate] = useState(null);
   const [assignedTo, setAssignedTo] = useState('');
+  const [projectId, setProjectId] = useState('');
   const [isCreator, setIsCreator] = useState(true);
-  
+
   // Add these new states
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [projects, setProjects] = useState([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
 
-  // Add this effect to fetch users
+  // Add this effect to fetch users and projects
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchData = async () => {
       try {
         setLoadingUsers(true);
-        const response = await api.get('/users');
-        setUsers(response.data);
+        setLoadingProjects(true);
+
+        // Fetch users
+        const usersResponse = await api.get('/users');
+        setUsers(usersResponse.data);
+
+        // Fetch projects
+        const projectsResponse = await api.get('/projects');
+        setProjects(projectsResponse.data);
       } catch (error) {
-        console.error('Failed to fetch users:', error);
+        console.error('Failed to fetch data:', error);
       } finally {
         setLoadingUsers(false);
+        setLoadingProjects(false);
       }
     };
 
-    fetchUsers();
+    fetchData();
   }, []);
 
   // Check if current user is the creator of the task
   useEffect(() => {
     if (task && currentUser) {
-      const isOwner = (currentUser.id === task.createdBy?._id || 
+      const isOwner = (currentUser.id === task.createdBy?._id ||
                       currentUser._id === task.createdBy?._id);
       setIsCreator(isOwner);
-      
+
       if (!isOwner && task) {
         onClose();
         alert("You don't have permission to edit this task. Only the creator can modify tasks.");
@@ -76,7 +87,7 @@ const TaskModal = ({ isOpen, onClose, onSave, task = null }) => {
     if (task) {
       setTitle(task.title || '');
       setDescription(task.description || '');
-      
+
       // Map status from backend format to UI format
       const statusMap = {
         'To Do': 'todo',
@@ -84,7 +95,7 @@ const TaskModal = ({ isOpen, onClose, onSave, task = null }) => {
         'Done': 'done'
       };
       setStatus(statusMap[task.status] || 'todo');
-      
+
       // Map priority from backend format to UI format
       const priorityMap = {
         'Low': 'low',
@@ -92,12 +103,15 @@ const TaskModal = ({ isOpen, onClose, onSave, task = null }) => {
         'High': 'high'
       };
       setPriority(priorityMap[task.priority] || 'medium');
-      
+
       // Set due date if exists
       setSelectedDate(task.dueDate ? new Date(task.dueDate) : null);
-      
+
       // Set assigned user if exists
       setAssignedTo(task.assignedTo?._id || task.assignedTo || '');
+
+      // Set project if exists
+      setProjectId(task.project?._id || task.project || '');
     } else {
       // Reset form for new task
       setTitle('');
@@ -106,12 +120,30 @@ const TaskModal = ({ isOpen, onClose, onSave, task = null }) => {
       setPriority('medium');
       setSelectedDate(null);
       setAssignedTo('');
+
+      // If there are projects, select the first one by default for new tasks
+      if (projects.length > 0) {
+        setProjectId(projects[0]._id);
+      } else {
+        setProjectId('');
+      }
     }
-  }, [task, isOpen]);
+  }, [task, isOpen, projects]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
+    // Validate required fields
+    if (!title.trim()) {
+      alert('Task title is required');
+      return;
+    }
+
+    if (!projectId) {
+      alert('Please select a project');
+      return;
+    }
+
     // Map status values to match the server-side validation
     const statusMapping = {
       'todo': 'To Do',
@@ -125,14 +157,15 @@ const TaskModal = ({ isOpen, onClose, onSave, task = null }) => {
       'medium': 'Medium',
       'high': 'High'
     };
-    
+
     onSave({
       title,
       description,
       status: statusMapping[status],
       priority: priorityMapping[priority],
       dueDate: selectedDate ? selectedDate.toISOString() : null,
-      assignedTo: assignedTo || null
+      assignedTo: assignedTo || null,
+      project: projectId
     });
   };
 
@@ -250,6 +283,38 @@ const TaskModal = ({ isOpen, onClose, onSave, task = null }) => {
             </div>
           </div>
 
+          {/* Project Selection */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-300">
+              Project
+            </label>
+            <div className="relative">
+              <select
+                value={projectId}
+                onChange={(e) => setProjectId(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-800/40 border border-gray-700/50 rounded-lg text-gray-200 placeholder-gray-400 focus:outline-none focus:border-purple-500/50 transition-colors appearance-none"
+                disabled={loadingProjects}
+                required
+              >
+                <option value="">Select project</option>
+                {loadingProjects ? (
+                  <option value="" disabled>Loading projects...</option>
+                ) : (
+                  projects.map((project) => (
+                    <option key={project._id} value={project._id}>
+                      {project.name}
+                    </option>
+                  ))
+                )}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
           {/* Due Date and Assign To */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -311,7 +376,7 @@ const TaskModal = ({ isOpen, onClose, onSave, task = null }) => {
               {task ? 'Save Changes' : 'Create Task'}
             </button>
           </div>
-          
+
           {/* Spacer for fixed button on mobile */}
           <div className="h-20 sm:h-0"></div>
         </form>

@@ -1,177 +1,140 @@
-# Task Manager Application (Take-Home Assignment)
+# Task Manager Application
 
-This is a full-stack task management application built as a take-home assignment. It allows users to register, log in, create, view, update, delete, and assign tasks.
+A full-stack task management application built with Express.js, React (Next.js), and MongoDB.
 
 ## Features
 
-*   **User Authentication:** Secure registration and login using JWT and bcrypt password hashing.
-*   **Task Management:** Full CRUD operations for tasks (`title`, `description`, `dueDate`, `priority`, `status`).
-*   **Team Collaboration:** Tasks can be assigned to other registered users. Basic console log notifications on assignment (placeholder for real notifications).
-*   **Dashboard:** Displays tasks with filtering options:
-    *   Tasks assigned to the user.
-    *   Tasks created by the user.
-    *   Overdue tasks.
-*   **Search & Filter:** Search tasks by title/description and filter by status & priority.
-*   **API:** RESTful API built with Node.js and Express.
-*   **Database:** MongoDB with Mongoose ODM.
-*   **Frontend:** Responsive UI built with Next.js and Tailwind CSS.
+- User authentication with JWT
+- Project management (up to 4 projects per user)
+- Task management with status tracking
+- Responsive design for mobile and desktop
+- User assignment for tasks
+- Priority and status management
+- Task filtering and search
 
-## Tech Stack
+## Technologies Used
 
-*   **Frontend:** Next.js (React), Tailwind CSS, Axios
-*   **Backend:** Node.js, Express.js
-*   **Database:** MongoDB, Mongoose
-*   **Authentication:** JSON Web Tokens (JWT), bcrypt
-*   **Validation:** Joi (Backend)
+- **Frontend**: Next.js, React, TailwindCSS
+- **Backend**: Express.js, Node.js
+- **Database**: MongoDB with Mongoose
+- **Authentication**: JWT (JSON Web Tokens)
+- **Validation**: Joi
 
-## Project Structure
+## Application Requirements
 
-```
-.
-├── app/                  # Next.js Frontend (App Router)
-│   ├── components/       # Reusable React components (TaskCard, TaskModal, ProtectedRoute)
-│   ├── context/          # React Context (AuthContext)
-│   ├── hooks/            # Custom React hooks (if any)
-│   ├── lib/              # Utility functions (api.js)
-│   ├── login/            # Login page route
-│   ├── register/         # Register page route
-│   ├── dashboard/        # Dashboard page route
-│   ├── globals.css       # Global styles
-│   └── layout.js         # Root layout
-├── public/               # Static assets for Next.js
-├── server/               # Node.js Backend
-│   ├── config/           # Database configuration (db.js)
-│   ├── middleware/       # Express middleware (auth.js)
-│   ├── models/           # Mongoose models (User.js, Task.js)
-│   ├── routes/           # API routes (auth.js, tasks.js)
-│   ├── .env              # Environment variables (MONGO_URI, JWT_SECRET) - **DO NOT COMMIT**
-│   ├── index.js          # Server entry point
-│   └── package.json      # Backend dependencies
-├── .gitignore
-├── eslint.config.mjs     # ESLint config (Frontend)
-├── jsconfig.json         # JS config (Frontend)
-├── next.config.mjs       # Next.js config
-├── package-lock.json     # Dependency lockfile (Frontend)
-├── package.json          # Frontend dependencies & scripts
-├── postcss.config.mjs    # PostCSS config (for Tailwind)
-└── README.md             # This file
-```
+The application fulfills the following requirements:
 
-## Setup Instructions
+### User Management
+- User signup with email, password, name, and country
+- User login with JWT authentication
+- User profile management
+
+### Project Management
+- Each user can have up to 4 projects
+- Create, read, update, and delete projects
+- Project dashboard with task overview
+
+### Task Management
+- Create, read, update, and delete tasks
+- Tasks have title, description, status, priority, due date
+- Tasks are associated with projects
+- Task filtering and search functionality
+- Task assignment to users
+
+## Getting Started
 
 ### Prerequisites
 
-*   Node.js (v18 or later recommended)
-*   npm (usually comes with Node.js)
-*   MongoDB (local instance or a cloud service like MongoDB Atlas)
+- Node.js (v14 or higher)
+- MongoDB (local or Atlas)
 
 ### Installation
 
-1.  **Clone the repository:**
-    ```bash
-    git clone <your-repo-url>
-    cd task-manager-app
-    ```
+1. Clone the repository:
+   ```
+   git clone https://github.com/yourusername/task-manager-app.git
+   cd task-manager-app
+   ```
 
-2.  **Install Frontend Dependencies:**
-    ```bash
-    npm install
-    ```
+2. Install dependencies:
+   ```
+   # Install backend dependencies
+   cd server
+   npm install
 
-3.  **Install Backend Dependencies:**
-    ```bash
-    cd server
-    npm install
-    cd ..
-    ```
+   # Install frontend dependencies
+   cd ..
+   npm install
+   ```
 
-4.  **Configure Environment Variables (Backend):**
-    *   Navigate to the `server` directory: `cd server`
-    *   Create a `.env` file by copying the example: `cp .env.example .env` (or create it manually).
-    *   Edit the `server/.env` file and add your configuration:
-        ```dotenv
-        # MongoDB Connection String - Replace with your actual URI
-        MONGO_URI=mongodb://localhost:27017/taskmanager # Or your Atlas URI
+3. Set up environment variables:
+   - Create a `.env` file in the server directory with the following variables:
+     ```
+     PORT=5000
+     MONGO_URI=your_mongodb_connection_string
+     JWT_SECRET=your_jwt_secret
+     ```
+   - Create a `.env.local` file in the root directory with:
+     ```
+     NEXT_PUBLIC_API_URL=http://localhost:5000/api
+     ```
 
-        # JWT Secret Key - Replace with a strong, random secret
-        JWT_SECRET=your_super_secret_jwt_key_here
+4. Start the development servers:
+   ```
+   # Start backend server
+   cd server
+   npm start
 
-        # Server Port (Optional - defaults to 5000 if not set)
-        # PORT=5000
-        ```
-    *   **Important:** Replace placeholders with your actual MongoDB connection string and a strong, unique JWT secret. Keep this file secure and **do not** commit it to version control. Ensure `.env` is listed in your root `.gitignore` file (it should be if you used `create-next-app`).
+   # In a new terminal, start frontend
+   cd ..
+   npm run dev
+   ```
 
-## Running Locally
+5. Open your browser and navigate to `http://localhost:3000`
 
-You need to run both the frontend and backend servers concurrently.
+## API Documentation
 
-1.  **Run the Backend Server:**
-    *   Open a terminal in the project root directory.
-    *   Navigate to the server directory: `cd server`
-    *   Start the server (using nodemon for development is recommended for auto-restarts):
-        ```bash
-        # Install nodemon globally or as a dev dependency if you haven't already
-        # npm install -g nodemon OR npm install --save-dev nodemon
+### Authentication Endpoints
 
-        # Start with nodemon (if installed)
-        nodemon index.js
+- `POST /api/auth/register` - Register a new user
+  - Body: `{ name, email, password, country }`
+- `POST /api/auth/login` - Login a user
+  - Body: `{ email, password }`
+- `GET /api/auth/me` - Get current user (requires authentication)
 
-        # Or start with node
-        node index.js
-        ```
-    *   The backend API should now be running (typically on `http://localhost:5000`).
+### Project Endpoints
 
-2.  **Run the Frontend Server:**
-    *   Open a **separate** terminal in the project root directory.
-    *   Start the Next.js development server:
-        ```bash
-        npm run dev
-        ```
-    *   The frontend application should now be running (typically on `http://localhost:3000`).
+- `GET /api/projects` - Get all projects for a user (requires authentication)
+- `GET /api/projects/:id` - Get a single project with its tasks (requires authentication)
+- `POST /api/projects` - Create a new project (requires authentication)
+  - Body: `{ name, description }`
+- `PUT /api/projects/:id` - Update a project (requires authentication)
+  - Body: `{ name, description }`
+- `DELETE /api/projects/:id` - Delete a project and its tasks (requires authentication)
 
-3.  **Access the Application:**
-    *   Open your web browser and navigate to `http://localhost:3000`.
-    *   You should see the login/register page.
+### Task Endpoints
 
-## API Endpoints (Brief Overview)
+- `GET /api/tasks` - Get all tasks (with optional filters) (requires authentication)
+- `GET /api/tasks/:id` - Get a single task (requires authentication)
+- `POST /api/tasks` - Create a new task (requires authentication)
+  - Body: `{ title, description, status, priority, dueDate, project, assignedTo }`
+- `PUT /api/tasks/:id` - Update a task (requires authentication)
+  - Body: `{ title, description, status, priority, dueDate, project, assignedTo }`
+- `DELETE /api/tasks/:id` - Delete a task (requires authentication)
 
-*   `POST /api/auth/register`: Register a new user.
-*   `POST /api/auth/login`: Log in a user, returns JWT.
-*   `GET /api/auth/me`: Get logged-in user details (requires token).
-*   `POST /api/tasks`: Create a new task (requires token).
-*   `GET /api/tasks`: Get tasks with filtering/searching (requires token).
-    *   Query Params: `view`, `status`, `priority`, `search`, `dueDate`
-*   `GET /api/tasks/:id`: Get a single task by ID (requires token).
-*   `PUT /api/tasks/:id`: Update a task by ID (requires token).
-*   `DELETE /api/tasks/:id`: Delete a task by ID (requires token).
+### User Endpoints
 
-## Trade-offs and Decisions
-
-*   **Authentication:** Chose JWT over session-based auth for statelessness, potentially easier scaling, and common use in SPAs. Did not implement refresh tokens for simplicity in this assignment scope.
-*   **Database:** Used MongoDB (via Mongoose) as a document database is often suitable for evolving schemas like tasks. PostgreSQL with TypeORM was an alternative considered.
-*   **Backend Framework:** Used Express.js for its simplicity and wide adoption. NestJS was considered for its structure but deemed slightly overkill for this assignment's scope.
-*   **Frontend State Management:** Used React Context API for global auth state as it's built-in and sufficient for current needs. Zustand or Redux Toolkit could be used for more complex state.
-*   **Notifications:** Implemented simple `console.log` placeholders instead of a full email or WebSocket system due to time constraints. WebSockets (Socket.IO) would be ideal for real-time updates.
-*   **User Fetching for Assignment:** The modal currently doesn't fetch users for the "Assign To" dropdown. A `/api/users` endpoint would be needed for this.
-*   **Error Handling:** Basic error handling is implemented. More granular error handling and user feedback could be added.
-*   **Testing:** No automated tests (Unit/Integration) were written due to time constraints. Jest would be a suitable framework.
-
-## Assumptions
-
-*   The user has Node.js, npm, and MongoDB installed or accessible.
-*   The backend server runs on port 5000 and the frontend on port 3000 locally.
-*   Overdue tasks are determined based on the server's current time compared to the `dueDate`. Timezone differences are not explicitly handled in this basic implementation.
-*   For task viewing/editing/deleting, only the user who created the task has permission (this could be expanded based on roles or assignment).
+- `GET /api/users` - Get all users (requires authentication)
+- `GET /api/users/:id` - Get a single user (requires authentication)
 
 ## Deployment
 
-*   **Frontend:** Deployed on [Your Frontend URL - e.g., Vercel/Netlify Link]
-*   **Backend:** Deployed on [Your Backend URL - e.g., Render/Railway Link]
+This application can be deployed using various platforms:
 
-*(Replace the bracketed placeholders above with your actual deployment URLs once deployed.)*
+- Frontend: Vercel, Netlify
+- Backend: Heroku, Railway, Render
+- Database: MongoDB Atlas
 
-## AI Usage Disclosure
+## License
 
-*   [Explain how AI tools like ChatGPT, Copilot, etc., were used. Be specific. E.g., "Used ChatGPT to generate boilerplate for the Express server setup.", "Used GitHub Copilot for autocompleting utility functions like `formatDate`.", "Consulted an AI assistant for debugging a specific Mongoose query error."]
-
-*(Fill in the AI usage section based on your actual usage.)*
+This project is licensed under the MIT License.

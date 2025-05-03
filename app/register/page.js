@@ -9,29 +9,33 @@ export default function RegisterPage() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [country, setCountry] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [formError, setFormError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  
+
   // Added validation state
   const [formErrors, setFormErrors] = useState({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
+    country: '',
   });
   const [touched, setTouched] = useState({
     firstName: false,
     lastName: false,
     email: false,
     password: false,
+    country: false,
   });
   const [validFields, setValidFields] = useState({
     firstName: false,
     lastName: false,
     email: false,
     password: false,
+    country: false,
   });
 
   const { register, loading, error: apiError } = useAuth();
@@ -43,25 +47,31 @@ export default function RegisterPage() {
       setFormErrors(prev => ({...prev, firstName: firstNameError}));
       setValidFields(prev => ({...prev, firstName: !firstNameError && firstName.length > 0}));
     }
-    
+
     if (touched.lastName) {
       const lastNameError = validateLastName(lastName);
       setFormErrors(prev => ({...prev, lastName: lastNameError}));
       setValidFields(prev => ({...prev, lastName: !lastNameError && lastName.length > 0}));
     }
-    
+
     if (touched.email) {
       const emailError = validateEmail(email);
       setFormErrors(prev => ({...prev, email: emailError}));
       setValidFields(prev => ({...prev, email: !emailError && email.length > 0}));
     }
-    
+
     if (touched.password) {
       const passwordError = validatePassword(password);
       setFormErrors(prev => ({...prev, password: passwordError}));
       setValidFields(prev => ({...prev, password: !passwordError && password.length > 0}));
     }
-  }, [firstName, lastName, email, password, touched]);
+
+    if (touched.country) {
+      const countryError = validateCountry(country);
+      setFormErrors(prev => ({...prev, country: countryError}));
+      setValidFields(prev => ({...prev, country: !countryError && country.length > 0}));
+    }
+  }, [firstName, lastName, email, password, country, touched]);
 
   // Update validation functions
 
@@ -74,7 +84,7 @@ export default function RegisterPage() {
 
   const validateLastName = (name) => {
     // Don't show error if empty - we'll catch this on submit
-    if (!name || name.trim().length === 0) return '';  
+    if (!name || name.trim().length === 0) return '';
     if (name.trim().length < 2) return 'Last name must be at least 2 characters';
     return '';
   };
@@ -93,6 +103,13 @@ export default function RegisterPage() {
     return '';
   };
 
+  const validateCountry = (country) => {
+    // Don't show error if empty - we'll catch this on submit
+    if (!country || country.trim().length === 0) return '';
+    if (country.trim().length < 2) return 'Country must be at least 2 characters';
+    return '';
+  };
+
   const handleBlur = (field) => {
     // Only set touched to true if the field has content or was previously touched
     if (
@@ -100,10 +117,11 @@ export default function RegisterPage() {
       (field === 'lastName' && lastName.length > 0) ||
       (field === 'email' && email.length > 0) ||
       (field === 'password' && password.length > 0) ||
+      (field === 'country' && country.length > 0) ||
       touched[field]
     ) {
       setTouched(prev => ({ ...prev, [field]: true }));
-      
+
       if (field === 'firstName') {
         const firstNameError = validateFirstName(firstName);
         setFormErrors(prev => ({ ...prev, firstName: firstNameError }));
@@ -120,6 +138,10 @@ export default function RegisterPage() {
         const passwordError = validatePassword(password);
         setFormErrors(prev => ({ ...prev, password: passwordError }));
         setValidFields(prev => ({...prev, password: !passwordError && password.length > 0}));
+      } else if (field === 'country') {
+        const countryError = validateCountry(country);
+        setFormErrors(prev => ({ ...prev, country: countryError }));
+        setValidFields(prev => ({...prev, country: !countryError && country.length > 0}));
       }
     }
   };
@@ -142,19 +164,22 @@ export default function RegisterPage() {
     const lastNameError = lastName ? validateLastName(lastName) : 'Last name is required';
     const emailError = email ? validateEmail(email) : 'Email is required';
     const passwordError = password ? validatePassword(password) : 'Password is required';
-    
-    if (firstNameError || lastNameError || emailError || passwordError) {
+    const countryError = country ? validateCountry(country) : 'Country is required';
+
+    if (firstNameError || lastNameError || emailError || passwordError || countryError) {
       setFormErrors({
         firstName: firstNameError,
         lastName: lastNameError,
         email: emailError,
-        password: passwordError
+        password: passwordError,
+        country: countryError
       });
       setTouched({
         firstName: true,
         lastName: true,
-        email: true, 
-        password: true
+        email: true,
+        password: true,
+        country: true
       });
       return;
     }
@@ -165,11 +190,11 @@ export default function RegisterPage() {
     }
 
     const fullName = `${firstName} ${lastName}`.trim();
-    
+
     try {
       setSuccessMessage('');
-      const success = await register(fullName, email, password);
-      
+      const success = await register(fullName, email, password, country);
+
       if (success) {
         setSuccessMessage('Account created successfully! Redirecting to dashboard...');
         // The redirection is handled in the AuthContext
@@ -184,12 +209,12 @@ export default function RegisterPage() {
     <div className="min-h-screen flex flex-col bg-[#662d91]">
       <div className="flex flex-grow">
         {/* Left Column with Tokyo Tower background */}
-        <div className="hidden md:block relative w-1/2 bg-cover bg-center" 
+        <div className="hidden md:block relative w-1/2 bg-cover bg-center"
              style={{ backgroundImage: "url('https://images.unsplash.com/photo-1513407030348-c983a97b98d8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1472&q=80')" }}>
-          
+
           {/* Purple overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-[#662d91]/50 to-[#662d91]/70"></div>
-          
+
           <div className="flex flex-col h-full justify-between p-8 relative z-10">
             <div>
               <div className="flex items-center">
@@ -199,7 +224,7 @@ export default function RegisterPage() {
                 <h2 className="text-4xl font-bold text-white">TaskMaster</h2>
               </div>
             </div>
-            
+
             <div className="space-y-6 mb-8">
               <h3 className="text-3xl font-bold text-white">
                 Start Your Productivity Journey
@@ -207,7 +232,7 @@ export default function RegisterPage() {
               <p className="text-white/80 text-lg max-w-md">
                 Join thousands of teams who use TaskMaster to organize, track, and achieve more together.
               </p>
-              
+
               <div className="space-y-4">
                 <div className="flex items-start">
                   <div className="bg-white/20 rounded-full p-1 mr-3 mt-0.5">
@@ -249,7 +274,7 @@ export default function RegisterPage() {
             </div>
           </div>
         </div>
-        
+
         {/* Right Column - Form */}
         <div className="w-full md:w-1/2 bg-black flex items-center justify-center">
           <div className="w-full max-w-lg p-8 px-10">
@@ -292,7 +317,7 @@ export default function RegisterPage() {
                 <div className="w-full md:w-1/2">
                   <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-1">First Name</label>
                   <div className="relative">
-                    <input 
+                    <input
                       type="text"
                       id="firstName"
                       name="firstName"
@@ -303,7 +328,7 @@ export default function RegisterPage() {
                       placeholder="Enter your first name"
                       required
                     />
-                    
+
                     {touched.firstName && (
                       <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
                         {formErrors.firstName ? (
@@ -327,7 +352,7 @@ export default function RegisterPage() {
                 <div className="w-full md:w-1/2">
                   <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-1">Last Name</label>
                   <div className="relative">
-                    <input 
+                    <input
                       type="text"
                       id="lastName"
                       name="lastName"
@@ -338,7 +363,7 @@ export default function RegisterPage() {
                       placeholder="Enter your last name"
                       required
                     />
-                    
+
                     {touched.lastName && (
                       <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
                         {formErrors.lastName ? (
@@ -397,6 +422,46 @@ export default function RegisterPage() {
                 </div>
                 {touched.email && formErrors.email && (
                   <p className="mt-1 text-xs text-red-400" id="email-error">{formErrors.email}</p>
+                )}
+              </div>
+
+              {/* Country field */}
+              <div className="space-y-2">
+                <label htmlFor="country" className="block text-sm font-medium text-gray-300">Country</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-gray-500">
+                      <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM6.262 6.072a8.25 8.25 0 1010.562-.766 4.5 4.5 0 01-1.318 1.357L14.25 7.5l.165.33a.809.809 0 01-1.086 1.085l-.604-.302a1.125 1.125 0 00-1.298.21l-.132.131c-.439.44-.439 1.152 0 1.591l.296.296c.256.257.622.374.98.314l1.17-.195c.323-.054.654.036.905.245l1.33 1.108c.32.267.46.694.358 1.1a8.7 8.7 0 01-2.288 4.04l-.723.724a1.125 1.125 0 01-1.298.21l-.153-.076a1.125 1.125 0 01-.622-1.006v-1.089c0-.298-.119-.585-.33-.796l-1.347-1.347a1.125 1.125 0 01-.21-1.298L9.75 12l-1.64-1.64a6 6 0 01-1.676-3.257l-.172-1.03z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <input
+                    id="country"
+                    type="text"
+                    placeholder="Your country"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    onBlur={() => handleBlur('country')}
+                    required
+                    aria-invalid={Boolean(formErrors.country)}
+                    aria-describedby={formErrors.country ? "country-error" : undefined}
+                    className={`w-full rounded-md bg-[#1b1b1b] p-3 pl-10 text-white placeholder-gray-500 outline-none focus:ring-2 border ${getBorderColorClass('country')}`}
+                  />
+                  {touched.country && (
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      {formErrors.country ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-red-500">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      ) : validFields.country ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-green-500">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      ) : null}
+                    </div>
+                  )}
+                </div>
+                {touched.country && formErrors.country && (
+                  <p className="mt-1 text-xs text-red-400" id="country-error">{formErrors.country}</p>
                 )}
               </div>
 
