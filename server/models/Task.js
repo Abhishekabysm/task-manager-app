@@ -1,4 +1,4 @@
-// Update your Task model to include notifications
+// Update your Task model to include notifications and project reference
 
 const mongoose = require('mongoose');
 
@@ -24,6 +24,11 @@ const TaskSchema = new mongoose.Schema({
   },
   dueDate: {
     type: Date
+  },
+  project: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Project',
+    required: true
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

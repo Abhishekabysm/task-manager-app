@@ -15,6 +15,7 @@ const createTaskSchema = Joi.object({
     priority: Joi.string().valid('Low', 'Medium', 'High').required(),
     status: Joi.string().valid('To Do', 'In Progress', 'Done').required(),
     assignedTo: Joi.string().hex().length(24).optional().allow(null), // Optional ObjectId string
+    project: Joi.string().hex().length(24).required(), // Required project reference
 });
 
 // Schema for updating a task (all fields optional)
@@ -25,6 +26,7 @@ const updateTaskSchema = Joi.object({
     priority: Joi.string().valid('Low', 'Medium', 'High').optional(),
     status: Joi.string().valid('To Do', 'In Progress', 'Done').optional(),
     assignedTo: Joi.string().hex().length(24).optional().allow(null), // Optional ObjectId string
+    project: Joi.string().hex().length(24).optional(), // Optional project reference
 }).min(1); // Require at least one field to update
 
 // --- Routes ---
@@ -95,7 +97,7 @@ router.post('/', auth, async (req, res) => {
         return res.status(400).json({ message: error.details[0].message });
     }
 
-    const { title, description, dueDate, priority, status, assignedTo } = req.body;
+    const { title, description, dueDate, priority, status, assignedTo, project } = req.body;
 
     try {
         // 2. Check if assigned user exists (if provided)
@@ -113,6 +115,7 @@ router.post('/', auth, async (req, res) => {
             dueDate,
             priority,
             status,
+            project, // Add project reference
             assignedTo: assignedTo || null, // Store null if not provided
             createdBy: req.user.id, // Changed from user to createdBy
         });
@@ -166,7 +169,7 @@ router.get('/', auth, async (req, res) => {
             // No additional filters, will return all tasks
         } else {
             // Default view: Tasks created by or assigned to the user OR unassigned tasks
-            query.$or = [ 
+            query.$or = [
                 { createdBy: req.user.id }, // Changed from user to createdBy
                 { assignedTo: req.user.id },
                 { assignedTo: null } // Also show unassigned tasks
@@ -268,11 +271,9 @@ router.put('/:id', auth, async (req, res) => {
         return res.status(400).json({ message: error.details[0].message });
     }
 
-    const { title, description, dueDate, priority, status, assignedTo } = req.body;
-
-    // 2. Build task object with fields to update
+    // Use the spread operator to get all fields
     const taskFields = { ...req.body };
-    
+
     // Add lastModifiedBy field when updating
     if (taskFields.assignedTo) {
         taskFields.lastModifiedBy = req.user.id;

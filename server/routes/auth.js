@@ -13,6 +13,7 @@ const registerSchema = Joi.object({
   name: Joi.string().min(3).required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
+  country: Joi.string().required(),
 });
 
 const loginSchema = Joi.object({
@@ -43,13 +44,18 @@ const generateToken = (userId) => {
  * @access  Public
  */
 router.post('/register', async (req, res) => {
+  // Debug: Log the request body
+  console.log('Register request body:', req.body);
+
   // 1. Validate request body
   const { error } = registerSchema.validate(req.body);
   if (error) {
+    console.log('Validation error:', error.details[0].message);
     return res.status(400).json({ message: error.details[0].message });
   }
 
-  const { name, email, password } = req.body;
+  const { name, email, password, country } = req.body;
+  console.log('Extracted fields:', { name, email, password: '***', country });
 
   try {
     // 2. Check if user already exists
@@ -67,6 +73,7 @@ router.post('/register', async (req, res) => {
       name,
       email,
       password: hashedPassword,
+      country,
     });
     await user.save();
 

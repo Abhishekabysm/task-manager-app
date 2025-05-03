@@ -20,6 +20,10 @@ const UserSchema = new mongoose.Schema({
     minlength: 6, // Enforce minimum password length
     select: false, // Do not return password by default when querying users
   },
+  country: {
+    type: String,
+    required: [true, 'Please add a country'],
+  },
   // Optional: Add role later for RBAC
   // role: {
   //   type: String,
